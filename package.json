@@ -10,7 +10,10 @@
   },
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun --watch index.ts"
+    "dev": "bun --watch index.ts",
+    "docker:build": "docker build -t bun-postgres-docker .",
+    "docker:run": "docker run --rm --env-file .env bun-postgres-docker",
+    "docker": "bun run docker:build && bun run docker:run"
   },
   "devDependencies": {
     "@types/bun": "latest"
