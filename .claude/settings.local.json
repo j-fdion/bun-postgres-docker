@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(bun *)",
+      "PowerShell(bunx tsc --noEmit)",
+      "PowerShell(bunx tsc --noEmit; echo \"exit: $LASTEXITCODE\")"
+    ]
+  }
+}

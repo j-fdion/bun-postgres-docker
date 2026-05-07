@@ -16,7 +16,7 @@ async function run(
   args: string[],
   env: Record<string, string> = {}
 ) {
-  console.log(`\n> ${cmd} ${args.join(" ")}`);
+  console.error(`\n> ${cmd} ${args.join(" ")}`);
   const proc = Bun.spawn([cmd, ...args], {
     stdout: "inherit",
     stderr: "inherit",
@@ -49,7 +49,7 @@ for (const [key, val] of Object.entries(required)) {
   }
 }
 
-console.log("⏳ Dumping from Supabase...");
+console.error("⏳ Dumping from Supabase...");
 await run(
   "pg_dump",
   [
@@ -66,9 +66,9 @@ await run(
   ],
   { PGPASSWORD: supabasePassword }
 );
-console.log("✅ Dump complete.");
+console.error("✅ Dump complete.");
 
-console.log("⏳ Restoring to Railway...");
+console.error("⏳ Restoring to Railway...");
 await run(
   "pg_restore",
   [
@@ -84,4 +84,4 @@ await run(
   ],
   { PGPASSWORD: railwayPassword }
 );
-console.log("✅ Restore complete!");
+console.error("✅ Restore complete!");
