@@ -10,6 +10,7 @@ const railwayPassword = process.env.RAILWAY_PASSWORD || "";
 const railwayDb = process.env.RAILWAY_DB || "railway";
 
 const DUMP_FILE = "prod_snapshot.dump";
+const skipDump = process.argv.includes("--skip-dump") || process.env.SKIP_DUMP === "1";
 
 async function run(
   cmd: string,
@@ -34,12 +35,16 @@ async function run(
 }
 
 const required: Record<string, string> = {
-  SUPABASE_HOST: supabaseHost,
-  SUPABASE_USER: supabaseUser,
-  SUPABASE_PASSWORD: supabasePassword,
-  SUPABASE_DB: supabaseDb,
   RAILWAY_HOST: railwayHost,
   RAILWAY_PASSWORD: railwayPassword,
+  ...(skipDump
+    ? {}
+    : {
+        SUPABASE_HOST: supabaseHost,
+        SUPABASE_USER: supabaseUser,
+        SUPABASE_PASSWORD: supabasePassword,
+        SUPABASE_DB: supabaseDb,
+      }),
 };
 
 for (const [key, val] of Object.entries(required)) {
@@ -49,24 +54,34 @@ for (const [key, val] of Object.entries(required)) {
   }
 }
 
-console.error("⏳ Dumping from Supabase...");
-await run(
-  "pg_dump",
-  [
-    "-h", supabaseHost,
-    "-p", "5432",
-    "-U", supabaseUser,
-    "-d", supabaseDb,
-    "--format=custom",
-    "--no-owner",
-    "--no-acl",
-    "--schema=public",
-    "--schema=drizzle",
-    "--file", DUMP_FILE,
-  ],
-  { PGPASSWORD: supabasePassword }
-);
-console.error("✅ Dump complete.");
+if (skipDump) {
+  const dumpExists = await Bun.file(DUMP_FILE).exists();
+  if (!dumpExists) {
+    console.error(`❌ --skip-dump set but ${DUMP_FILE} not found`);
+    process.exit(1);
+  }
+  console.error(`⏭  Skipping dump, reusing ${DUMP_FILE}`);
+} else {
+  console.error("⏳ Dumping from Supabase...");
+  await run(
+    "pg_dump",
+    [
+      "-h", supabaseHost,
+      "-p", "5432",
+      "-U", supabaseUser,
+      "-d", supabaseDb,
+      "--format=custom",
+      "--no-owner",
+      "--no-acl",
+      "--schema=public",
+      "--schema=drizzle",
+      "--exclude-table=public.__*",
+      "--file", DUMP_FILE,
+    ],
+    { PGPASSWORD: supabasePassword }
+  );
+  console.error("✅ Dump complete.");
+}
 
 console.error("⏳ Resetting Railway schemas...");
 await run(
@@ -77,7 +92,7 @@ await run(
     "-U", railwayUser,
     "-d", railwayDb,
     "-v", "ON_ERROR_STOP=1",
-    "-c", "DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE;",
+    "-c", "DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE; CREATE SCHEMA IF NOT EXISTS extensions; CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions; CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA extensions;",
   ],
   { PGPASSWORD: railwayPassword }
 );
