@@ -1,1 +1,13 @@
 node_modules/
+dist/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Database dumps
+*.dump
+
+# OS
+.DS_Store

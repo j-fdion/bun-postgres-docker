@@ -18,4 +18,4 @@ COPY package.json bun.lock* ./
 RUN bun install
 COPY . .
 
-CMD ["bun", "run", "index.tsx"]
+CMD ["bun", "run", "index.ts"]
