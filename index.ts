@@ -68,12 +68,24 @@ await run(
 );
 console.error("✅ Dump complete.");
 
+console.error("⏳ Resetting Railway schemas...");
+await run(
+  "psql",
+  [
+    "-h", railwayHost,
+    "-p", railwayPort,
+    "-U", railwayUser,
+    "-d", railwayDb,
+    "-v", "ON_ERROR_STOP=1",
+    "-c", "DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE;",
+  ],
+  { PGPASSWORD: railwayPassword }
+);
+
 console.error("⏳ Restoring to Railway...");
 await run(
   "pg_restore",
   [
-    "--clean",
-    "--if-exists",
     "--no-owner",
     "--no-acl",
     "-h", railwayHost,
