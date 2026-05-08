@@ -46,3 +46,4 @@ bun run start
 
 1. Runs `pg_dump` against Supabase for the `public` and `drizzle` schemas (custom format, no owner/ACL) into `prod_snapshot.dump`.
 2. Runs `pg_restore --clean --if-exists` against Railway to apply the dump.
+3. Creates `f_unaccent(text)`, an `IMMUTABLE` wrapper around `extensions.unaccent` so it can be used in functional indexes (e.g. `CREATE INDEX ON formation (f_unaccent(lower(title)))`).

@@ -112,3 +112,19 @@ await run(
   { PGPASSWORD: railwayPassword }
 );
 console.error("✅ Restore complete!");
+
+console.error("⏳ Creating f_unaccent wrapper...");
+await run(
+  "psql",
+  [
+    "-h", railwayHost,
+    "-p", railwayPort,
+    "-U", railwayUser,
+    "-d", railwayDb,
+    "-v", "ON_ERROR_STOP=1",
+    "-c",
+    "CREATE OR REPLACE FUNCTION f_unaccent(text) RETURNS text LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT AS $$ SELECT extensions.unaccent($1) $$;",
+  ],
+  { PGPASSWORD: railwayPassword }
+);
+console.error("✅ f_unaccent ready.");
